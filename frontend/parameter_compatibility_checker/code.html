@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "outline": "#8b90a0",
+                  "on-tertiary-fixed": "#002021",
+                  "on-primary-fixed": "#001a41",
+                  "surface-dim": "#111318",
+                  "surface-container-high": "#282a2e",
+                  "inverse-on-surface": "#2f3035",
+                  "tertiary-fixed": "#63f7ff",
+                  "tertiary-container": "#00a1a7",
+                  "surface-container-lowest": "#0c0e12",
+                  "inverse-surface": "#e2e2e8",
+                  "secondary-fixed-dim": "#2ae500",
+                  "surface-container-highest": "#333539",
+                  "primary-container": "#4b8eff",
+                  "error": "#ffb4ab",
+                  "background": "#111318",
+                  "surface-container": "#1e2024",
+                  "inverse-primary": "#005bc1",
+                  "on-secondary-fixed-variant": "#095300",
+                  "primary-fixed": "#d8e2ff",
+                  "on-surface": "#e2e2e8",
+                  "on-secondary-container": "#0f6d00",
+                  "on-secondary": "#053900",
+                  "surface-bright": "#37393e",
+                  "outline-variant": "#414755",
+                  "on-primary": "#002e69",
+                  "surface": "#111318",
+                  "error-container": "#93000a",
+                  "on-primary-fixed-variant": "#004493",
+                  "tertiary-fixed-dim": "#00dce5",
+                  "secondary": "#d7ffc5",
+                  "primary": "#adc6ff",
+                  "on-background": "#e2e2e8",
+                  "on-surface-variant": "#c1c6d7",
+                  "on-primary-container": "#00285c",
+                  "surface-variant": "#333539",
+                  "surface-container-low": "#1a1c20",
+                  "primary-fixed-dim": "#adc6ff",
+                  "on-secondary-fixed": "#022100",
+                  "on-error": "#690005",
+                  "secondary-container": "#2ff801",
+                  "on-tertiary-fixed-variant": "#004f53",
+                  "surface-tint": "#adc6ff",
+                  "secondary-fixed": "#79ff5b",
+                  "on-tertiary-container": "#002f32",
+                  "on-error-container": "#ffdad6",
+                  "tertiary": "#00dce5",
+                  "on-tertiary": "#003739"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.125rem",
+                  "lg": "0.25rem",
+                  "xl": "0.5rem",
+                  "full": "0.75rem"
+          },
+          "fontFamily": {
+                  "headline": ["Space Grotesk"],
+                  "body": ["Inter"],
+                  "label": ["Inter"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-panel {
+      background: rgba(40, 42, 46, 0.6);
+      backdrop-filter: blur(20px);
+      outline: 1px solid rgba(139, 144, 160, 0.15);
+    }
+    .technical-grid {
+      background-image: radial-gradient(rgba(173, 198, 255, 0.05) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30">
+<!-- Side Navigation (Shared Component) -->
+<aside class="hidden md:flex flex-col h-full py-8 bg-[#111318] h-screen w-64 fixed left-0 top-0 z-50 transition-all duration-200 ease-in-out">
+<div class="px-6 mb-12">
+<h1 class="text-[#adc6ff] font-['Space_Grotesk'] font-black text-xl tracking-tighter uppercase">FACTORY_OS_V1</h1>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center px-6 py-3 text-[#8b90a0] hover:text-[#e2e2e8] hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-['Inter'] text-xs font-semibold">Dashboard</span>
+</a>
+<a class="flex items-center px-6 py-3 text-[#8b90a0] hover:text-[#e2e2e8] hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">settings_input_component</span>
+<span class="font-['Inter'] text-xs font-semibold">Machines</span>
+</a>
+<a class="flex items-center px-6 py-3 text-[#8b90a0] hover:text-[#e2e2e8] hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">view_in_ar</span>
+<span class="font-['Inter'] text-xs font-semibold">Molds</span>
+</a>
+<a class="flex items-center px-6 py-3 text-[#8b90a0] hover:text-[#e2e2e8] hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">settings_suggest</span>
+<span class="font-['Inter'] text-xs font-semibold">Operations</span>
+</a>
+<a class="flex items-center px-6 py-3 text-[#8b90a0] hover:text-[#e2e2e8] hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">build</span>
+<span class="font-['Inter'] text-xs font-semibold">Maintenance</span>
+</a>
+<a class="flex items-center px-6 py-3 bg-[#adc6ff]/10 text-[#adc6ff] border-r-2 border-[#adc6ff] transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">rule</span>
+<span class="font-['Inter'] text-xs font-semibold">Parameters</span>
+</a>
+</nav>
+</aside>
+<!-- Top App Bar (Shared Component) -->
+<header class="fixed top-0 w-full z-40 bg-[#111318]/60 backdrop-blur-xl border-b border-white/5 flex justify-between items-center px-6 h-16 md:pl-72">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#adc6ff]">precision_manufacturing</span>
+<h2 class="font-['Space_Grotesk'] tracking-tight text-sm uppercase text-blue-200">CORE CONTROL</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex flex-col items-end">
+<span class="text-[10px] text-outline uppercase tracking-widest font-bold">System Status</span>
+<span class="text-[10px] text-secondary font-mono flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></span>
+          OPTIMAL
+        </span>
+</div>
+<div class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover opacity-80" data-alt="Operator profile avatar, futuristic cinematic lighting on male engineer with smart glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJjBmNWO1sZkV3W71svVsx7WwBloD3tyeuaOM7Kx4_H52J7Uuf72sJXKzkO43r-KMADhExpUXv3mtb85b6-FK95PZpYA7ZddPH_ch3pZU7X1Et6Xev9tIdxylNR6BG-wNFMrPWYK_UrfWC_pT4QXy2INndIeUEg0RgRcjPfwe2WyhFu_1f5u_r-CiYxMuH1FUZdDMP_xQQaOIvXcLUZKW6b-81gWjsqqoLmo4EzxUjYiTAkwkHiZ26iP3xmDmaxhvS8Pn4iS48_VSg"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-24 md:pl-72 md:pr-8 px-4 min-h-screen technical-grid">
+<div class="max-w-7xl mx-auto">
+<!-- Page Header Section -->
+<section class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h3 class="text-4xl font-headline font-bold text-on-surface tracking-tighter">Parameter Checker</h3>
+<p class="text-outline text-sm font-body mt-2">Validate machine-to-mold synchronization and operational tolerance levels.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="bg-surface-container-high px-4 py-2 rounded-lg border border-white/5 flex items-center gap-2 hover:bg-surface-bright transition-all">
+<span class="material-symbols-outlined text-sm">history</span>
+<span class="text-xs font-bold uppercase tracking-widest">Logs</span>
+</button>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-widest active:scale-95 transition-all">
+            Save Reglage
+          </button>
+</div>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Left Column: Selection & Status (8 Cols) -->
+<div class="lg:col-span-8 space-y-6">
+<!-- Selection Area -->
+<div class="glass-panel p-6 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-[10px] uppercase tracking-[0.2em] text-outline font-black">Active Machine Unit</label>
+<div class="relative group">
+<select class="w-full bg-surface-container-lowest border-b border-outline-variant/30 text-on-surface px-4 py-3 appearance-none focus:outline-none focus:border-primary transition-all font-mono text-sm">
+<option>UNIT_HAITIAN_MA3200_II</option>
+<option>UNIT_ENGEL_VICTORY_500</option>
+<option>UNIT_ARBURG_ALLROUNDER_1100</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-[10px] uppercase tracking-[0.2em] text-outline font-black">Mounted Mold Profile</label>
+<div class="relative group">
+<select class="w-full bg-surface-container-lowest border-b border-outline-variant/30 text-on-surface px-4 py-3 appearance-none focus:outline-none focus:border-primary transition-all font-mono text-sm">
+<option>MOLD_BUMPER_FRONT_V4</option>
+<option>MOLD_PANEL_REAR_LH</option>
+<option>MOLD_DASH_CONSOL_09</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Compatibility Score Card -->
+<div class="bg-surface-container-low rounded-xl p-8 relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
+<div class="relative w-40 h-40 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90">
+<circle class="text-surface-container-highest" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-secondary" cx="80" cy="80" fill="transparent" r="70" stroke="currentColor" stroke-dasharray="440" stroke-dashoffset="8" stroke-width="8"></circle>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="text-4xl font-headline font-bold text-on-surface">98<span class="text-xl">%</span></span>
+<span class="text-[8px] text-outline uppercase font-black tracking-widest">Match</span>
+</div>
+</div>
+<div class="flex-1 text-center md:text-left">
+<div class="inline-flex items-center gap-2 bg-secondary/10 border border-secondary/20 px-3 py-1 rounded-full mb-4">
+<span class="w-2 h-2 bg-secondary rounded-full"></span>
+<span class="text-[10px] font-black text-secondary uppercase tracking-widest">Optimal Match Detected</span>
+</div>
+<h4 class="text-2xl font-headline font-medium text-on-surface mb-2">High Efficiency Sync</h4>
+<p class="text-outline text-sm leading-relaxed max-w-md">Selected Mold and Machine parameters are within 0.05% of engineered tolerance. AI suggests minor pressure offset for cycle speed increase.</p>
+</div>
+<div class="absolute -right-12 -bottom-12 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[180px]">verified</span>
+</div>
+</div>
+<!-- Parameters Validation Table -->
+<div class="bg-surface-container-low rounded-xl overflow-hidden">
+<div class="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-surface-container">
+<span class="text-[10px] uppercase font-black tracking-widest text-outline">Configuration Check-list</span>
+<span class="text-[10px] font-mono text-outline">v1.2.984-FINAL</span>
+</div>
+<div class="divide-y divide-white/5">
+<!-- Item 1 -->
+<div class="px-6 py-4 flex items-center justify-between group hover:bg-surface-container-highest transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">thermostat</span>
+</div>
+<div>
+<div class="text-sm font-bold text-on-surface">Nozzle Temperature</div>
+<div class="text-[10px] text-outline font-mono uppercase">240°C Target / 239.8°C Actual</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:block h-1 w-24 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[99%]"></div>
+</div>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="px-6 py-4 flex items-center justify-between group hover:bg-surface-container-highest transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">compress</span>
+</div>
+<div>
+<div class="text-sm font-bold text-on-surface">Injection Pressure</div>
+<div class="text-[10px] text-outline font-mono uppercase">1450 Bar Peak / 1442 Bar Mean</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:block h-1 w-24 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[96%]"></div>
+</div>
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="px-6 py-4 flex items-center justify-between group hover:bg-surface-container-highest transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">speed</span>
+</div>
+<div>
+<div class="text-sm font-bold text-on-surface">Cycle Speed</div>
+<div class="text-[10px] text-outline font-mono uppercase">14.2s / Deviation 0.4s</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:block h-1 w-24 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-tertiary w-[88%]"></div>
+</div>
+<span class="material-symbols-outlined text-tertiary">info</span>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="px-6 py-4 flex items-center justify-between group hover:bg-surface-container-highest transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-error">
+<span class="material-symbols-outlined">water_drop</span>
+</div>
+<div>
+<div class="text-sm font-bold text-on-surface">Cooling Rate</div>
+<div class="text-[10px] text-outline font-mono uppercase">4.2 L/min / Critical Flow</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden sm:block h-1 w-24 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-error w-[42%]"></div>
+</div>
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">cancel</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: AI Insights Side Panel (4 Cols) -->
+<div class="lg:col-span-4">
+<div class="glass-panel rounded-xl h-full flex flex-col sticky top-24">
+<div class="p-6 border-b border-white/5 bg-tertiary-container/10 flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary">psychology</span>
+<span class="font-headline font-bold text-sm text-tertiary tracking-tight uppercase">AI Recommendation</span>
+</div>
+<div class="p-6 flex-1 space-y-8">
+<!-- Insight 1 -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-[10px] font-black text-outline uppercase tracking-widest">Efficiency Hack</span>
+<span class="text-[10px] text-tertiary font-mono">+4.2% Yield</span>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-highest border-l-2 border-tertiary">
+<p class="text-xs text-on-surface-variant leading-relaxed">Increase holding pressure by <strong class="text-on-surface">15 Bar</strong> during final 2 seconds to eliminate micro-cavitation risk in rear panel cavity.</p>
+</div>
+</div>
+<!-- Insight 2 -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<span class="text-[10px] font-black text-outline uppercase tracking-widest">Energy Load</span>
+<span class="text-[10px] text-secondary font-mono">-12kWh Saved</span>
+</div>
+<div class="p-4 rounded-lg bg-surface-container-highest border-l-2 border-secondary">
+<p class="text-xs text-on-surface-variant leading-relaxed">Unit detected idle capacity. Pre-heat phase for MOLD_BUMPER can be delayed by <strong class="text-on-surface">12 minutes</strong> without impact.</p>
+</div>
+</div>
+<!-- Visual Trend Card -->
+<div class="mt-auto space-y-4 pt-8">
+<div class="text-[10px] font-black text-outline uppercase tracking-widest">Simulation Trend</div>
+<div class="h-32 w-full rounded bg-surface-container-lowest relative overflow-hidden border border-white/5 p-4">
+<!-- Sparkline simulation -->
+<div class="absolute bottom-0 left-0 right-0 h-16 opacity-30">
+<svg class="w-full h-full preserve-3d" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M0,80 Q25,20 50,70 T100,30" fill="none" stroke="#00dce5" stroke-width="2"></path>
+</svg>
+</div>
+<div class="relative z-10 flex flex-col justify-between h-full">
+<div class="flex justify-between items-start">
+<span class="text-xs font-mono text-tertiary">SIM_RUN_09</span>
+<span class="text-[8px] bg-white/10 px-1 rounded text-outline uppercase">Active</span>
+</div>
+<div class="flex items-baseline gap-1">
+<span class="text-lg font-bold font-mono">0.034</span>
+<span class="text-[8px] text-outline uppercase">MS Deviation</span>
+</div>
+</div>
+</div>
+<button class="w-full py-3 rounded-lg border border-tertiary/30 text-tertiary text-xs font-bold uppercase tracking-[0.2em] hover:bg-tertiary/10 transition-all">
+                  Apply Recommendations
+                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Mobile Bottom Nav (Shared Component) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 h-20 bg-[#111318]/80 backdrop-blur-2xl z-50 rounded-t-xl border-t border-white/10">
+<a class="flex flex-col items-center justify-center text-[#8b90a0] hover:text-[#e2e2e8]" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#8b90a0] hover:text-[#e2e2e8]" href="#">
+<span class="material-symbols-outlined">sensors</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest mt-1">Active</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#8b90a0] hover:text-[#e2e2e8]" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest mt-1">Logs</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#adc6ff]/20 text-[#adc6ff] rounded-lg px-3 py-1 scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">terminal</span>
+<span class="font-['Inter'] text-[10px] uppercase tracking-widest mt-1">System</span>
+</a>
+</nav>
+</body></html>
