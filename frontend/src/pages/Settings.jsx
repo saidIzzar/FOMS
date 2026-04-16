@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Save, User, Globe, Bell, Moon, Sun, Shield, Key } from 'lucide-react';
+import { Save, User, Globe, Bell, Moon, Sun, Shield, Key, Users, Wrench, Cog } from 'lucide-react';
 
 const LANGUAGES = [
   { code: 'ar', name: 'العربية', dir: 'rtl' },
@@ -8,8 +8,37 @@ const LANGUAGES = [
   { code: 'fr', name: 'Français', dir: 'ltr' }
 ];
 
+const ROLES = [
+  {
+    id: 'admin',
+    name: 'Administrator',
+    description: 'Full system access',
+    color: 'bg-red-500/20 text-red-400 border-red-500/30',
+    icon: Cog,
+    permissions: ['Machines', 'Molds', 'Production', 'Maintenance', 'Users', 'Settings']
+  },
+  {
+    id: 'engineer',
+    name: 'Engineer',
+    description: 'Production + Maintenance access',
+    color: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    icon: Wrench,
+    permissions: ['Production', 'Maintenance', 'View Machines', 'View Molds']
+  },
+  {
+    id: 'operator',
+    name: 'Operator',
+    description: 'Machine operation only',
+    color: 'bg-green-500/20 text-green-400 border-green-500/30',
+    icon: Users,
+    permissions: ['Own Production', 'View Machines', 'View Molds']
+  }
+];
+
 export default function Settings() {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [settings, setSettings] = useState({
     language: user?.language || 'ar',
     email: user?.email || '',
@@ -39,14 +68,15 @@ export default function Settings() {
         {[
           { id: 'profile', label: 'Profile', icon: User },
           { id: 'preferences', label: 'Preferences', icon: Bell },
-          { id: 'security', label: 'Security', icon: Shield }
+          { id: 'security', label: 'Security', icon: Shield },
+          ...(isAdmin ? [{ id: 'roles', label: 'Roles', icon: Shield }] : [])
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all whitespace-nowrap ${
-              activeTab === tab.id 
-                ? 'bg-primary/20 text-primary border border-primary/30' 
+              activeTab === tab.id
+                ? 'bg-primary/20 text-primary border border-primary/30'
                 : 'bg-surface/50 text-on-surface-variant hover:text-on-surface hover:bg-surface/70'
             }`}
           >
@@ -300,6 +330,53 @@ export default function Settings() {
           {saving ? 'Saving...' : 'Save Settings'}
         </button>
       </div>
+
+      {activeTab === 'roles' && isAdmin && (
+        <div className="space-y-6">
+          <div className="glass-card p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2.5 bg-primary/20 rounded-xl">
+                <Shield className="text-primary" size={22} />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold">Role-Based Access Control</h3>
+                <p className="text-sm text-on-surface-variant">System permission management</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {ROLES.map(role => (
+                <div
+                  key={role.id}
+                  className={`p-5 rounded-xl border ${role.color}`}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <role.icon size={20} />
+                    <h4 className="font-semibold">{role.name}</h4>
+                  </div>
+                  <p className="text-sm mb-4 opacity-80">{role.description}</p>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium opacity-60">Permissions:</p>
+                    {role.permissions.map(perm => (
+                      <div key={perm} className="flex items-center gap-2 text-sm">
+                        <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></span>
+                        {perm}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 p-4 bg-surface/50 rounded-xl">
+              <p className="text-sm text-on-surface-variant">
+                <strong>Security Note:</strong> Backend API enforces role-based access. Operators can only edit their own production records.
+                Engineers can create production and maintenance. Admins have full system access.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

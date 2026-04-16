@@ -24,7 +24,7 @@ def run_migrations():
     cursor = conn.cursor()
 
     try:
-        # Check molds table for rayoun_id
+        # Check molds table for rayoun_id and box_id
         cursor.execute("PRAGMA table_info(molds)")
         mold_cols = {c[1] for c in cursor.fetchall()}
 
@@ -33,6 +33,62 @@ def run_migrations():
             cursor.execute("ALTER TABLE molds ADD COLUMN rayoun_id INTEGER REFERENCES rayouns(id)")
             conn.commit()
             logger.info("Migration: rayoun_id added")
+
+        if "box_id" not in mold_cols:
+            logger.info("Adding box_id column to molds...")
+            cursor.execute("ALTER TABLE molds ADD COLUMN box_id INTEGER REFERENCES boxes(id)")
+            conn.commit()
+            logger.info("Migration: box_id added")
+
+        # Check boxes table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='boxes'")
+        if not cursor.fetchone():
+            logger.info("Creating boxes table...")
+            cursor.execute("""
+                CREATE TABLE boxes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    box_number TEXT NOT NULL,
+                    rayoun_id INTEGER REFERENCES rayouns(id),
+                    position INTEGER DEFAULT 1,
+                    capacity INTEGER DEFAULT 6,
+                    status TEXT DEFAULT 'available'
+                )
+            """)
+            conn.commit()
+            logger.info("Migration: boxes table created")
+
+        # Check rayouns table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='rayouns'")
+        if not cursor.fetchone():
+            logger.info("Creating rayouns table...")
+            cursor.execute("""
+                CREATE TABLE rayouns (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    description TEXT,
+                    is_active INTEGER DEFAULT 1
+                )
+            """)
+            conn.commit()
+            logger.info("Migration: rayouns table created")
+
+        # Check production_runs table for new columns
+        cursor.execute("PRAGMA table_info(production_runs)")
+        run_cols = {c[1] for c in cursor.fetchall()}
+
+        new_run_fields = {
+            "mold_mount_time": "ALTER TABLE production_runs ADD COLUMN mold_mount_time TEXT",
+            "mold_change_time": "ALTER TABLE production_runs ADD COLUMN mold_change_time TEXT",
+            "finish_time": "ALTER TABLE production_runs ADD COLUMN finish_time TEXT",
+            "total_change_minutes": "ALTER TABLE production_runs ADD COLUMN total_change_minutes INTEGER DEFAULT 0"
+        }
+
+        for col, sql in new_run_fields.items():
+            if col not in run_cols:
+                logger.info(f"Adding {col} column to production_runs...")
+                cursor.execute(sql)
+                conn.commit()
+                logger.info(f"Migration: {col} added")
 
         logger.info("Migrations complete")
     except Exception as e:

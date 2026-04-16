@@ -172,13 +172,26 @@ export const maintenanceAPI = {
 };
 
 export const productionAPI = {
-  getAll: () => api.get('/production-runs').catch(e => handleError(e, [])),
-  create: (data) => api.post('/production-runs', data),
-  update: (id, data) => api.patch(`/production-runs/${id}`, data),
-  delete: (id) => api.delete(`/production-runs/${id}`)
+  getAll: () => api.get('/production').catch(e => handleError(e, [])),
+  getById: (id) => api.get(`/production/${id}`).catch(e => handleError(e, {})),
+  create: (data) => api.post('/production', data),
+  update: (id, data) => api.patch(`/production/${id}`, data),
+  delete: (id) => api.delete(`/production/${id}`),
+  
+  mountMold: (runId) => api.post(`/production/${runId}/mount-mold`, {}),
+  changeMold: (runId, newMoldId) => api.post(`/production/${runId}/change-mold`, { new_mold_id: newMoldId }),
+  finish: (runId, data) => api.patch(`/production/${runId}/finish`, data)
+};
+
+export const operatorsAPI = {
+  getAll: () => api.get('/operators').catch(e => handleError(e, [])),
+  create: (data) => api.post('/operators', data),
+  getById: (id) => api.get(`/operators/${id}`).catch(e => handleError(e, {}))
 };
 
 export const materialsAPI = {
+  getAll: () => api.get('/materials').catch(e => handleError(e, [])),
+  getById: (id) => api.get(`/materials/${id}`).catch(e => handleError(e, {})),
   getSuppliers: () => api.get('/materials').catch(e => handleError(e, [])),
   createSupplier: (data) => api.post('/materials', data),
   getReceptions: () => api.get('/materials/receptions').catch(e => handleError(e, [])),
@@ -213,18 +226,19 @@ export const aiAPI = {
 export const rayounsAPI = {
   getTree: () => api.get('/rayouns/tree').catch(e => handleError(e, [
     { id: 1, name: 'A', description: 'Rayoun A Storage', is_active: true, boxes: [
-      { id: 1, box_number: 'A1', rayoun_id: 1, position: 1, capacity: 6, status: 'available', molds: [] },
-      { id: 2, box_number: 'A2', rayoun_id: 1, position: 2, capacity: 6, status: 'available', molds: [] },
-      { id: 3, box_number: 'A3', rayoun_id: 1, position: 3, capacity: 6, status: 'full', molds: [
-        { id: 1, mold_code: 'M-001', cavities: 4, steel_type: 'P20', required_tonnage: 90, is_active: true, box_id: 1 }
-      ]}
+      { id: 1, box_number: 'A-01', rayoun_id: 1, position: 1, capacity: 20, status: 'available', molds: [] },
+      { id: 2, box_number: 'A-02', rayoun_id: 1, position: 2, capacity: 20, status: 'available', molds: [] },
+      { id: 3, box_number: 'A-03', rayoun_id: 1, position: 3, capacity: 20, status: 'available', molds: [] }
     ]},
     { id: 2, name: 'B', description: 'Rayoun B Storage', is_active: true, boxes: [
-      { id: 4, box_number: 'B1', rayoun_id: 2, position: 1, capacity: 6, status: 'available', molds: [] },
-      { id: 5, box_number: 'B2', rayoun_id: 2, position: 2, capacity: 6, status: 'available', molds: [] }
+      { id: 4, box_number: 'B-01', rayoun_id: 2, position: 1, capacity: 20, status: 'available', molds: [] },
+      { id: 5, box_number: 'B-02', rayoun_id: 2, position: 2, capacity: 20, status: 'available', molds: [] },
+      { id: 6, box_number: 'B-03', rayoun_id: 2, position: 3, capacity: 20, status: 'available', molds: [] }
     ]},
     { id: 3, name: 'C', description: 'Rayoun C Storage', is_active: true, boxes: [
-      { id: 6, box_number: 'C1', rayoun_id: 3, position: 1, capacity: 6, status: 'available', molds: [] }
+      { id: 7, box_number: 'C-01', rayoun_id: 3, position: 1, capacity: 20, status: 'available', molds: [] },
+      { id: 8, box_number: 'C-02', rayoun_id: 3, position: 2, capacity: 20, status: 'available', molds: [] },
+      { id: 9, box_number: 'C-03', rayoun_id: 3, position: 3, capacity: 20, status: 'available', molds: [] }
     ]}
   ])),
   getAll: () => api.get('/rayouns').catch(e => handleError(e, [
@@ -236,7 +250,12 @@ export const rayounsAPI = {
   create: (data) => api.post('/rayouns', data),
   delete: (id) => api.delete(`/rayouns/${id}`),
   seed: () => api.post('/rayouns/seed').catch(e => handleError(e, { message: 'Seeded' })),
-  seedAll: () => api.post('/seed-all').catch(e => handleError(e, { message: 'Seeded', result: {} }))
+  seedAll: () => api.post('/seed-all').catch(e => handleError(e, { message: 'Seeded' })),
+  
+  assignMoldToBox: (moldId, boxId) => api.patch(`/molds/${moldId}`, { box_id: boxId }),
+  removeMoldFromBox: (moldId) => api.patch(`/molds/${moldId}`, { box_id: null }),
+  updateMoldLocation: (moldId, location) => api.patch(`/rayouns/molds/${moldId}/location`, { location }),
+  assignMolds: () => api.post('/rayouns/assign-molds').catch(e => handleError(e, { message: 'Assigned' }))
 };
 
 export const boxesAPI = {
@@ -247,6 +266,13 @@ export const boxesAPI = {
   updateStatus: (id, status) => api.patch(`/boxes/${id}/status`, null, { params: { status } }),
   delete: (id) => api.delete(`/boxes/${id}`),
   seed: () => api.post('/boxes/seed')
+};
+
+export const compatibilityAPI = {
+  check: (machineId, moldId) => api.post('/compatibility/check', { machine_id: machineId, mold_id: moldId }),
+  getBestMachine: (moldId, branchId) => api.get(`/compatibility/best-machine/${moldId}?branch_id=${branchId || ''}`),
+  getAllScores: (moldId) => api.get(`/compatibility/all-machines/${moldId}`),
+  selectMachine: (moldId, strategy = 'score') => api.get(`/compatibility/select/${moldId}?strategy=${strategy}`)
 };
 
 export default api;

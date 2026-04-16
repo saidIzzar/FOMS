@@ -3,10 +3,10 @@ import { moldsAPI, rayounsAPI } from '../services/api';
 import { useCrud } from '../hooks/useCrud';
 import { useNotifications } from '../context/NotificationContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Plus, Search, Box, Layers, MapPin, Gauge, TrendingUp, Edit2, Trash2, Download, FileSpreadsheet, Archive } from 'lucide-react';
+import { Plus, Search, Box as BoxIcon, MapPin, Edit2, Trash2, FileSpreadsheet } from 'lucide-react';
 import CrudModal from '../components/CrudModal';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { exportToCSV, exportToPDF } from '../utils/export';
+import { exportToCSV } from '../utils/export';
 
 const STATUS_COLORS = {
   active: '#22c55e',
@@ -15,19 +15,44 @@ const STATUS_COLORS = {
   retired: '#64748b'
 };
 
+const MATERIAL_OPTIONS = [
+  { value: 'ABS', label: 'ABS' },
+  { value: 'PP', label: 'PP' },
+  { value: 'PC', label: 'PC' },
+  { value: 'PE', label: 'PE' },
+  { value: 'PVC', label: 'PVC' },
+  { value: 'PS', label: 'PS' },
+  { value: 'POM', label: 'POM' },
+  { value: 'PA', label: 'PA (Nylon)' },
+];
+
+const STATUS_OPTIONS = [
+  { value: 'active', label: 'Active' },
+  { value: 'in_storage', label: 'In Storage' },
+  { value: 'in_maintenance', label: 'In Maintenance' },
+  { value: 'retired', label: 'Retired' }
+];
+
+const OLD_MOLD_FIELDS = [
+  { name: 'code', label: 'Code', type: 'text', required: true, placeholder: 'e.g., MOLD-A12' },
+  { name: 'product_name', label: 'Product Name', type: 'text', required: true },
+  { name: 'material', label: 'Material', type: 'select', options: MATERIAL_OPTIONS, required: true },
+  { name: 'cavities', label: 'Cavities', type: 'number', min: 1, max: 32, defaultValue: 1 },
+  { name: 'machine_tonnage_min', label: 'Min Tonnage (T)', type: 'number', min: 50, max: 1000, defaultValue: 150 },
+  { name: 'machine_tonnage_max', label: 'Max Tonnage (T)', type: 'number', min: 50, max: 1000, defaultValue: 350 },
+  { name: 'status', label: 'Status', type: 'select', options: STATUS_OPTIONS, required: true },
+];
+
 export default function Molds() {
   const { data: molds, loading, fetchAll, create, update, remove } = useCrud(moldsAPI);
   const { success, error } = useNotifications();
   const { t } = useLanguage();
-  const [machines, setMachines] = useState([]);
   const [rayouns, setRayouns] = useState([]);
   const [rayounTree, setRayounTree] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRayounId, setSelectedRayounId] = useState(null);
-  const [selectedBoxId, setSelectedBoxId] = useState(null);
-
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [deleteDialog, setDeleteDialog] = useState({ open: false, item: null });
@@ -43,326 +68,145 @@ export default function Molds() {
         rayounsAPI.getAll(),
         rayounsAPI.getTree()
       ]);
-      if (flatRes.data) {
-        setRayouns(flatRes.data);
-      }
-      if (treeRes.data) {
-        setRayounTree(treeRes.data);
-      }
+      if (flatRes?.data) setRayouns(flatRes.data);
+      if (treeRes?.data) setRayounTree(treeRes.data);
     } catch (err) {
       console.error('Error fetching rayouns:', err);
     }
   };
 
-  const getRayounOptions = () => {
-    return rayouns.map(r => ({ value: r.id, label: `Rayoun ${r.name}` }));
-  };
+  const getRayounOptions = () => rayouns.map(r => ({ value: r.id, label: `Rayoun ${r.name}` }));
 
   const getBoxOptions = (rayounId) => {
     const rayoun = rayounTree.find(r => r.id === parseInt(rayounId));
-    if (!rayoun || !rayoun.boxes) return [];
-    return rayoun.boxes.map(b => ({
-      value: b.id,
-      label: b.box_number || b.name
-    }));
+    if (!rayoun?.boxes) return [];
+    return rayoun.boxes.map(b => ({ value: b.id, label: b.box_number }));
   };
 
-  const handleRayounChange = (rayounId) => {
-    setSelectedRayounId(rayounId);
-    setSelectedBoxId(null);
-  };
-
-  const moldFields = [
-    { name: 'mold_code', label: t('common.code'), type: 'text', required: true, placeholder: 'e.g., MOLD-A12' },
-    { name: 'steel_type', label: t('molds.steelType') || 'Steel Type', type: 'text', placeholder: 'e.g., P20, H13' },
+  const createFields = [
+    { name: 'mold_code', label: 'Code', type: 'text', required: true, placeholder: 'e.g., MOLD-A12' },
+    { name: 'steel_type', label: 'Steel Type', type: 'text', placeholder: 'e.g., P20, H13' },
     { name: 'length_mm', label: 'Length (mm)', type: 'number', required: true, defaultValue: 300 },
     { name: 'width_mm', label: 'Width (mm)', type: 'number', required: true, defaultValue: 250 },
     { name: 'height_mm', label: 'Height (mm)', type: 'number', required: true, defaultValue: 150 },
     { name: 'weight_kg', label: 'Weight (kg)', type: 'number', required: true, defaultValue: 120 },
-    { name: 'required_tonnage', label: t('common.tonnage'), type: 'number', required: true, defaultValue: 90 },
+    { name: 'required_tonnage', label: 'Tonnage (T)', type: 'number', required: true, defaultValue: 90 },
     { name: 'required_shot_volume', label: 'Shot Volume (cm³)', type: 'number', required: true, defaultValue: 80 },
-    { name: 'cavities', label: t('common.cavities'), type: 'number', min: 1, max: 32, defaultValue: 1 },
-    { name: 'status', label: t('common.status'), type: 'select', options: [
-      { value: 'active', label: t('status.active') },
-      { value: 'in_storage', label: t('status.in_storage') },
-      { value: 'in_maintenance', label: t('status.in_maintenance') },
-      { value: 'retired', label: t('status.retired') }
-    ], required: true },
-    {
-      name: 'rayoun_id',
-      label: t('nav.rayoun') || 'Rayoun',
-      type: 'select',
-      options: getRayounOptions(),
-      required: false,
-      onChange: handleRayounChange
-    },
-    {
-      name: 'box_id',
-      label: t('molds.box') || 'Box',
-      type: 'select',
-      options: selectedRayounId ? getBoxOptions(selectedRayounId) : [],
-      required: false,
-      disabled: !selectedRayounId
-    },
+    { name: 'cavities', label: 'Cavities', type: 'number', min: 1, max: 32, defaultValue: 1 },
+    { name: 'status', label: 'Status', type: 'select', options: STATUS_OPTIONS, required: true },
+    { name: 'rayoun_id', label: 'Rayoun', type: 'select', options: getRayounOptions(), required: false },
+    { name: 'location', label: 'Location', type: 'text', placeholder: 'Optional location' },
   ];
 
-  const filteredMolds = molds.filter(mold => {
-    const matchesSearch = (mold.mold_code?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (mold.steel_type?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || mold.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const getStatusCount = (status) => molds.filter(m => m.status === status).length;
+  const usedFields = editingItem ? createFields : createFields;
 
   const handleCreate = async (formData) => {
     try {
-      const moldData = {
-        mold_code: formData.mold_code,
-        steel_type: formData.steel_type,
-        length_mm: parseFloat(formData.length_mm),
-        width_mm: parseFloat(formData.width_mm),
-        height_mm: parseFloat(formData.height_mm),
-        weight_kg: parseFloat(formData.weight_kg),
-        required_tonnage: parseInt(formData.required_tonnage),
-        required_shot_volume: parseFloat(formData.required_shot_volume),
-        cavities: parseInt(formData.cavities) || 1,
-        status: formData.status,
-        rayoun_id: formData.rayoun_id || null,
-        box_id: formData.box_id || null,
-      };
-      await create(moldData);
-      success('Mold created successfully');
+      await create(formData);
+      success('Mold created');
       setModalOpen(false);
-      setSelectedRayounId(null);
-      setSelectedBoxId(null);
     } catch (err) {
-      error('Failed to create mold');
+      error('Failed to create');
     }
   };
 
   const handleUpdate = async (formData) => {
     try {
-      const moldData = {
-        mold_code: formData.mold_code,
-        steel_type: formData.steel_type,
-        length_mm: parseFloat(formData.length_mm),
-        width_mm: parseFloat(formData.width_mm),
-        height_mm: parseFloat(formData.height_mm),
-        weight_kg: parseFloat(formData.weight_kg),
-        required_tonnage: parseInt(formData.required_tonnage),
-        required_shot_volume: parseFloat(formData.required_shot_volume),
-        cavities: parseInt(formData.cavities) || 1,
-        status: formData.status,
-        rayoun_id: formData.rayoun_id || null,
-        box_id: formData.box_id || null,
-      };
-      await update(editingItem.id, moldData);
-      success('Mold updated successfully');
+      await update(editingItem.id, formData);
+      success('Mold updated');
       setModalOpen(false);
       setEditingItem(null);
-      setSelectedRayounId(null);
-      setSelectedBoxId(null);
     } catch (err) {
-      error('Failed to update mold');
+      error('Failed to update');
     }
   };
 
   const handleDelete = async () => {
     try {
       await remove(deleteDialog.item.id);
-      success('Mold deleted successfully');
+      success('Mold deleted');
       setDeleteDialog({ open: false, item: null });
     } catch (err) {
-      error('Failed to delete mold');
+      error('Failed to delete');
     }
   };
 
-  if (loading && molds.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <div key={i} className="glass-card p-4">
-              <div className="skeleton h-8 w-16 mb-2 rounded"></div>
-              <div className="skeleton h-4 w-24 rounded"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const filteredMolds = (molds || []).filter(m => {
+    if (!m) return false;
+    const search = (m.mold_code || m.code || m.steel_type || '').toLowerCase();
+    return search.includes(searchTerm.toLowerCase()) && (statusFilter === 'all' || m.status === statusFilter);
+  });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div style={{ padding: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gradient">Molds</h1>
-          <p className="text-on-surface-variant mt-1">Mold library and inventory management</p>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700 }}>Molds</h1>
+          <p style={{ color: '#94a3b8', marginTop: '0.25rem' }}>Mold management and tracking</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => exportToCSV(molds, 'molds', ['Code', 'Product Name', 'Material', 'Cavities', 'Tonnage', 'Status', 'Location'])}
-            className="btn-secondary flex items-center gap-2"
-          >
-            <FileSpreadsheet size={16} />
-            CSV
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button onClick={() => exportToCSV(molds, 'molds', ['Code', 'Status'])} style={{ padding: '0.5rem 1rem', background: 'rgba(30,41,59,0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.5rem', color: '#f1f5f9', cursor: 'pointer' }}>
+            <FileSpreadsheet size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />CSV
           </button>
-          <button
-            onClick={() => exportToPDF(molds, 'molds', 'Molds Report', [
-              { key: 'code', label: 'Code' },
-              { key: 'product_name', label: 'Product Name' },
-              { key: 'material', label: 'Material' },
-              { key: 'cavities', label: 'Cavities' },
-              { key: 'status', label: 'Status' }
-            ])}
-            className="btn-secondary flex items-center gap-2"
-          >
-            <Download size={16} />
-            PDF
-          </button>
-          <button
-            onClick={() => { setEditingItem(null); setModalOpen(true); setSelectedRayounId(null); setSelectedBoxId(null); }}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus size={18} />
-            Add Mold
+          <button onClick={() => setModalOpen(true)} style={{ padding: '0.5rem 1rem', background: '#38bdf8', border: 'none', borderRadius: '0.5rem', color: '#fff', cursor: 'pointer', fontWeight: 500 }}>
+            <Plus size={18} style={{ display: 'inline', marginRight: '0.5rem' }} />Add Mold
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <button
-          onClick={() => setStatusFilter('all')}
-          className={`glass-card text-left transition-all hover:scale-[1.02] ${statusFilter === 'all' ? 'border-primary/50 ring-1 ring-primary/30' : ''}`}
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+        <input
+          type="text"
+          placeholder="Search molds..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ flex: 1, padding: '0.75rem 1rem', background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', color: '#f1f5f9' }}
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{ padding: '0.75rem 1rem', background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', color: '#f1f5f9' }}
         >
-          <p className="text-2xl font-bold text-on-surface">{molds.length}</p>
-          <p className="text-sm text-on-surface-variant">Total</p>
-        </button>
-        {Object.keys(STATUS_COLORS).map(status => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
-            className={`glass-card text-left transition-all hover:scale-[1.02] ${statusFilter === status ? 'border-primary/50 ring-1 ring-primary/30' : ''}`}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[status] }}></div>
-              <p className="text-2xl font-bold text-on-surface">{getStatusCount(status)}</p>
-            </div>
-            <p className="text-sm text-on-surface-variant">{status}</p>
-          </button>
-        ))}
+          <option value="all">All Status</option>
+          {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center">
-        <label className="text-sm text-on-surface-variant font-medium">
-          <Search size={16} className="inline mr-2" />
-          Search:
-        </label>
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute start-4 top-1/2 -translate-y-1/2 text-on-surface-variant" size={18} />
-          <input
-            type="text"
-            placeholder="Search molds..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field w-full ps-11"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredMolds.map((mold, idx) => (
-          <div
-            key={mold.id}
-            className="glass-card p-4 group"
-            style={{ animationDelay: `${idx * 50}ms` }}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-secondary/20 to-green-600/20 rounded-xl">
-                <Box className="text-secondary" size={24} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+        {filteredMolds.map(mold => (
+          <div key={mold.id} style={{ background: 'linear-gradient(145deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95))', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '0.75rem', padding: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
+              <div>
+                <h3 style={{ fontWeight: 600, color: '#f1f5f9' }}>{mold.mold_code || mold.code}</h3>
+                <p style={{ fontSize: '0.875rem', color: '#94a3b8' }}>{mold.steel_type || mold.material}</p>
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => { 
-                    setEditingItem(mold); 
-                    setModalOpen(true); 
-                    setSelectedRayounId(mold.rayoun_id);
-                    setSelectedBoxId(mold.box_id);
-                  }}
-                  className="p-1.5 bg-surface/50 rounded-lg hover:bg-primary/20 text-on-surface-variant hover:text-primary transition-colors"
-                >
-                  <Edit2 size={14} />
-                </button>
-                <button
-                  onClick={() => setDeleteDialog({ open: true, item: mold })}
-                  className="p-1.5 bg-surface/50 rounded-lg hover:bg-error/20 text-on-surface-variant hover:text-error transition-colors"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
+              <span style={{ padding: '0.25rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: (STATUS_COLORS[mold.status] || '#64748b') + '20', color: STATUS_COLORS[mold.status] || '#64748b' }}>
+                {mold.status}
+              </span>
             </div>
-
-            <span className="px-3 py-1 rounded-full text-xs font-medium mb-2 inline-block"
-              style={{ backgroundColor: STATUS_COLORS[mold.status] + '20', color: STATUS_COLORS[mold.status] }}>
-              {mold.status}
-            </span>
-
-            <h3 className="text-lg font-semibold text-on-surface mb-1">{mold.mold_code}</h3>
-            <p className="text-sm text-on-surface-variant mb-4">{mold.steel_type || 'No Data'}</p>
-
-            <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-              <div className="bg-surface/50 rounded-lg p-2.5">
-                <div className="flex items-center gap-1.5 text-on-surface-variant mb-1">
-                  <Layers size={12} />
-                  <span className="text-xs">Cavities</span>
-                </div>
-                <p className="text-on-surface font-semibold">{mold.cavities || 1}</p>
-              </div>
-              <div className="bg-surface/50 rounded-lg p-2.5">
-                <div className="flex items-center gap-1.5 text-on-surface-variant mb-1">
-                  <Box size={12} />
-                  <span className="text-xs">Steel Type</span>
-                </div>
-                <p className="text-on-surface font-semibold">{mold.steel_type || '-'}</p>
-              </div>
-              <div className="bg-surface/50 rounded-lg p-2.5">
-                <div className="flex items-center gap-1.5 text-on-surface-variant mb-1">
-                  <Gauge size={12} />
-                  <span className="text-xs">Tonnage</span>
-                </div>
-                <p className="text-on-surface font-semibold">{mold.required_tonnage}T</p>
-              </div>
-              <div className="bg-surface/50 rounded-lg p-2.5">
-                <div className="flex items-center gap-1.5 text-on-surface-variant mb-1">
-                  <TrendingUp size={12} />
-                  <span className="text-xs">Cycles</span>
-                </div>
-                <p className="text-on-surface font-semibold">{mold.total_cycles?.toLocaleString() || 0}</p>
-              </div>
+            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.75rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem' }}>
+              <span>Cavities: {mold.cavities || 1}</span>
+              <span>Tonnage: {mold.required_tonnage || mold.machine_tonnage_min || '?'}T</span>
+              {mold.box_code && <span>Box: {mold.box_code}</span>}
+              {mold.rayoun_name && <span>Rayoun: {mold.rayoun_name}</span>}
+              {mold.location && <span style={{ gridColumn: '1/-1', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><MapPin size={12} />{mold.location}</span>}
             </div>
-
-            <div className="pt-3 border-t border-white/5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-on-surface-variant flex items-center gap-1">
-                  <MapPin size={12} />
-                  {mold.location || 'No Location'}
-                </span>
-              </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button onClick={() => { setEditingItem(mold); setModalOpen(true); }} style={{ flex: 1, padding: '0.5rem', background: 'rgba(56,189,248,0.2)', color: '#38bdf8', border: 'none', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+                <Edit2 size={14} style={{ display: 'inline', marginRight: '0.25rem' }} />Edit
+              </button>
+              <button onClick={() => setDeleteDialog({ open: true, item: mold })} style={{ padding: '0.5rem', background: 'rgba(239,68,68,0.2)', color: '#ef4444', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>
+                <Trash2 size={14} />
+              </button>
             </div>
           </div>
         ))}
       </div>
 
       {filteredMolds.length === 0 && (
-        <div className="glass-card text-center py-16">
-          <div className="w-20 h-20 mx-auto mb-4 bg-secondary/10 rounded-full flex items-center justify-center">
-            <Box size={40} className="text-on-surface-variant" />
-          </div>
-          <p className="text-on-surface-variant text-lg">No molds found</p>
-          <button onClick={() => setModalOpen(true)} className="btn-primary mt-4">
-            Add Mold
-          </button>
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+          <BoxIcon size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+          <p>No molds found</p>
         </div>
       )}
 
@@ -372,7 +216,7 @@ export default function Molds() {
         title={editingItem ? 'Edit Mold' : 'Add Mold'}
         item={editingItem}
         onSubmit={editingItem ? handleUpdate : handleCreate}
-        fields={moldFields}
+        fields={usedFields}
         loading={loading}
         size="lg"
       />
@@ -381,8 +225,8 @@ export default function Molds() {
         isOpen={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, item: null })}
         onConfirm={handleDelete}
-        title="Delete"
-        message={`Are you sure you want to delete "${deleteDialog.item?.code}"?`}
+        title="Delete Mold"
+        message={`Delete ${deleteDialog.item?.mold_code}?`}
         confirmText="Delete"
         type="danger"
         loading={loading}

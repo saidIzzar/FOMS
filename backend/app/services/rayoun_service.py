@@ -6,6 +6,37 @@ from app.schemas import (
     MoldCreate, MoldResponse
 )
 
+def mold_to_response(mold: Mold) -> MoldResponse:
+    box_code = None
+    rayoun_name = None
+    if mold.box:
+        box_code = mold.box.box_number
+        if mold.box.rayoun:
+            rayoun_name = mold.box.rayoun.name
+    elif mold.rayoun:
+        rayoun_name = mold.rayoun.name
+    
+    return MoldResponse(
+        id=mold.id,
+        mold_code=mold.mold_code,
+        length_mm=mold.length_mm,
+        width_mm=mold.width_mm,
+        height_mm=mold.height_mm,
+        weight_kg=mold.weight_kg,
+        required_tonnage=mold.required_tonnage,
+        required_shot_volume=mold.required_shot_volume,
+        cavities=mold.cavities,
+        steel_type=mold.steel_type,
+        location=mold.location,
+        status=mold.status,
+        is_active=mold.is_active,
+        box_id=mold.box_id,
+        rayoun_id=mold.rayoun_id,
+        box_code=box_code,
+        rayoun_name=rayoun_name
+    )
+
+
 class RayounService:
     """Rayoun storage management service"""
     
@@ -37,7 +68,7 @@ class RayounService:
         rayouns = db.query(Rayoun).filter(Rayoun.is_active == True).order_by(Rayoun.name).all()
         result = []
         for r in rayouns:
-            boxes = db.query(Box).filter(Box.rayoun_id == r.id).order_by(Box.position).all()
+            boxes = db.query(Box).filter(Box.rayoun_id == r.id, Box.status != 'deleted').order_by(Box.position).all()
             box_responses = []
             for box in boxes:
                 molds = db.query(Mold).filter(Mold.box_id == box.id, Mold.is_active == True).all()
@@ -48,7 +79,7 @@ class RayounService:
                     position=box.position,
                     capacity=box.capacity,
                     status=box.status,
-                    molds=[MoldResponse.model_validate(m) for m in molds]
+                    molds=[mold_to_response(m) for m in molds]
                 ))
             result.append(RayounWithBoxesResponse(
                 id=r.id,
@@ -203,3 +234,56 @@ class BoxService:
 
         db.commit()
         return count
+
+
+class MoldAssignmentService:
+    """Mold assignment and location management"""
+    
+    @staticmethod
+    def assign_mold_to_box(db: Session, mold_id: int, box_id: int) -> MoldResponse:
+        mold = db.query(Mold).filter(Mold.id == mold_id).first()
+        if not mold:
+            raise ValueError(f"Mold {mold_id} not found")
+        
+        box = db.query(Box).filter(Box.id == box_id).first()
+        if not box:
+            raise ValueError(f"Box {box_id} not found")
+        
+        current_molds = db.query(Mold).filter(
+            Mold.box_id == box_id,
+            Mold.is_active == True
+        ).count()
+        
+        if current_molds >= box.capacity:
+            raise ValueError(f"Box {box.box_number} is full (capacity: {box.capacity})")
+        
+        mold.box_id = box_id
+        mold.rayoun_id = box.rayoun_id
+        db.commit()
+        db.refresh(mold)
+        
+        return mold_to_response(mold)
+    
+    @staticmethod
+    def remove_mold_from_box(db: Session, mold_id: int) -> MoldResponse:
+        mold = db.query(Mold).filter(Mold.id == mold_id).first()
+        if not mold:
+            raise ValueError(f"Mold {mold_id} not found")
+        
+        mold.box_id = None
+        db.commit()
+        db.refresh(mold)
+        
+        return mold_to_response(mold)
+    
+    @staticmethod
+    def update_mold_location(db: Session, mold_id: int, location: str) -> MoldResponse:
+        mold = db.query(Mold).filter(Mold.id == mold_id).first()
+        if not mold:
+            raise ValueError(f"Mold {mold_id} not found")
+        
+        mold.location = location
+        db.commit()
+        db.refresh(mold)
+        
+        return mold_to_response(mold)

@@ -14,13 +14,41 @@ router.post('/token', async (req, res) => {
       return res.status(400).json({ error: 'Username and password required' });
     }
     
+    // Demo users (bypass DB) - use these credentials
+    const DEMO_USERS = {
+      'admin': { id: 1, password: 'admin', role: 'admin', first_name: 'Admin', last_name: 'User', email: 'admin@foms.com', department: 'IT', position: 'Admin', branch: 'Main', language: 'en' },
+      'engineer': { id: 2, password: 'engineer', role: 'engineer', first_name: 'John', last_name: 'Engineer', email: 'engineer@foms.com', department: 'Engineering', position: 'Engineer', branch: 'Main', language: 'en' },
+      'operator': { id: 3, password: 'operator', role: 'operator', first_name: 'Ahmed', last_name: 'Ali', email: 'operator@foms.com', department: 'Production', position: 'Operator', branch: 'Main', language: 'ar' }
+    };
+    
+    console.log('Login attempt:', username, password);
+    
+    // Check demo users first
+    const demoUser = DEMO_USERS[username];
+    if (demoUser && demoUser.password === password) {
+      const token = jwt.sign({ id: demoUser.id, role: demoUser.role }, config.JWT_SECRET, {
+        expiresIn: config.JWT_EXPIRES_IN
+      });
+      return res.json({
+        access: token,
+        user: { id: demoUser.id, username, ...demoUser }
+      });
+    }
+    
+    // Fall back to database user
     const user = await User.findOne({ where: { username } });
     
     if (!user || !user.is_active) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    // Support both bcrypt and plain text for demo
+    let isValidPassword = false;
+    if (user.password.startsWith('$2b$')) {
+      isValidPassword = await bcrypt.compare(password, user.password);
+    } else {
+      isValidPassword = password === user.password;
+    }
     
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });

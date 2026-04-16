@@ -32,6 +32,11 @@ export const theme = {
     glass: 'linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
   },
   
+  cards: {
+    glass: 'linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%)',
+    glassBorder: 'rgba(255, 255, 255, 0.05)',
+  },
+  
   shadows: {
     soft: '0 4px 16px rgba(0, 0, 0, 0.2)',
     glow: '0 0 16px rgba(56, 189, 248, 0.12)',

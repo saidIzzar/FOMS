@@ -103,32 +103,106 @@ class MoldBase(BaseModel):
     required_shot_volume: float
     cavities: int = 1
     steel_type: Optional[str] = None
+    location: Optional[str] = None  # Editable location metadata
 
 class MoldCreate(MoldBase):
     status: str = "active"
     box_id: Optional[int] = None
     rayoun_id: Optional[int] = None
 
+# Operator Schemas
+class OperatorBase(BaseModel):
+    name: str
+    employee_id: Optional[str] = None
+    department: Optional[str] = None
+
+
+class OperatorCreate(OperatorBase):
+    is_active: bool = True
+
+
+class OperatorResponse(OperatorBase):
+    id: int
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
 # Production Run Schemas
+MATERIAL_TYPES = ['PP', 'ABS', 'PC', 'PE', 'PA', 'PVC', 'PS', 'POM']
+
+PRODUCTION_STATUSES = ['created', 'mold_mounted', 'running', 'paused', 'mold_changed', 'finished']
+
 class ProductionRunBase(BaseModel):
     machine_id: int
     mold_id: int
+    operator_id: Optional[int] = None
+    material_type: Optional[str] = None
     start_time: str
+    target_quantity: Optional[int] = None
     ideal_cycle_time: Optional[float] = None
     actual_cycle_time: Optional[float] = None
     quantity_produced: int = 0
     quantity_rejected: int = 0
 
+
 class ProductionRunCreate(ProductionRunBase):
-    end_time: Optional[str] = None
-    status: str = "running"
+    status: str = "created"
+
+
+class ProductionRunUpdate(BaseModel):
+    finish_time: Optional[str] = None
+    mold_id: Optional[int] = None
+    status: Optional[str] = None
+    quantity_produced: Optional[int] = None
+    quantity_rejected: Optional[int] = None
+    material_type: Optional[str] = None
+
 
 class ProductionRunResponse(ProductionRunBase):
     id: int
-    end_time: Optional[str]
-    status: str
+    finish_time: Optional[str] = None
+    mold_mount_time: Optional[str] = None
+    mold_change_time: Optional[str] = None
+    mold_change_2_time: Optional[str] = None
+    total_change_minutes: float = 0.0
+    total_production_minutes: float = 0.0
+    net_production_minutes: float = 0.0
+    status: str = "created"
+    date: Optional[str] = None
+    machine_code: Optional[str] = None
+    mold_code: Optional[str] = None
+    operator_name: Optional[str] = None
+    machine_tonnage: Optional[int] = None
+    mold_required_tonnage: Optional[int] = None
+    is_mold_compatible: Optional[bool] = None
+    target_quantity: Optional[int] = None
+
     class Config:
         from_attributes = True
+
+
+# Production Event Schemas
+class MountMoldEvent(BaseModel):
+    pass
+
+
+class ChangeMoldEvent(BaseModel):
+    new_mold_id: int
+
+
+class FinishWorkEvent(BaseModel):
+    finish_time: Optional[str] = None
+    quantity_produced: Optional[int] = None
+    quantity_rejected: Optional[int] = None
+    material_type: Optional[str] = None
+
+
+class ProductionEventResponse(BaseModel):
+    success: bool
+    message: str
+    production_run: Optional[ProductionRunResponse] = None
 
 # Compatibility Schemas
 class CompatibilityRequest(BaseModel):
@@ -206,8 +280,30 @@ class MoldResponse(MoldBase):
     is_active: bool
     box_id: Optional[int] = None
     rayoun_id: Optional[int] = None
+    box_code: Optional[str] = None  # Included for frontend display
+    rayoun_name: Optional[str] = None  # Included for frontend display
     class Config:
         from_attributes = True
+
+# Mold Update Schema (partial update) - STRICT: only accepted fields
+class MoldUpdate(BaseModel):
+    mold_code: Optional[str] = None
+    length_mm: Optional[float] = None
+    width_mm: Optional[float] = None
+    height_mm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    required_tonnage: Optional[int] = None
+    required_shot_volume: Optional[float] = None
+    cavities: Optional[int] = None
+    steel_type: Optional[str] = None
+    location: Optional[str] = None
+    status: Optional[str] = None
+    box_id: Optional[int] = None
+    rayoun_id: Optional[int] = None
+
+# Mold Box Assignment - minimal schema for PATCH /molds/{id}
+class MoldBoxAssign(BaseModel):
+    box_id: Optional[int] = None
 
 # Box with Molds
 class BoxWithMoldsResponse(BoxResponse):
@@ -216,3 +312,11 @@ class BoxWithMoldsResponse(BoxResponse):
 # Rayoun with Boxes
 class RayounWithBoxesResponse(RayounResponse):
     boxes: list[BoxWithMoldsResponse] = []
+
+# Mold Assignment Schemas
+class AssignMoldToBoxRequest(BaseModel):
+    mold_id: int
+    box_id: int
+
+class UpdateMoldLocationRequest(BaseModel):
+    location: str

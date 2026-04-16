@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Enum as SQLEnum, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Enum as SQLEnum, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 from app.core.machine_catalog import ScrewType
@@ -96,6 +96,7 @@ class Mold(Base):
     steel_type = Column(String(50))
     status = Column(String(20), default="active")
     is_active = Column(Boolean, default=True)
+    location = Column(String(100), nullable=True)  # Editable location metadata
     box_id = Column(Integer, ForeignKey("boxes.id"), nullable=True)
     rayoun_id = Column(Integer, ForeignKey("rayouns.id"), nullable=True)
 
@@ -103,22 +104,55 @@ class Mold(Base):
     rayoun = relationship("Rayoun", back_populates="molds")
     production_runs = relationship("ProductionRun", back_populates="mold")
 
-class ProductionRun(Base):
-    __tablename__ = "production_runs"
+class Operator(Base):
+    __tablename__ = "operators"
     
     id = Column(Integer, primary_key=True, index=True)
-    machine_id = Column(Integer, ForeignKey("machines.id"), nullable=False)
-    mold_id = Column(Integer, ForeignKey("molds.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    employee_id = Column(String(50), unique=True)
+    department = Column(String(50))
+    is_active = Column(Boolean, default=True)
+    
+    production_runs = relationship("ProductionRun", back_populates="operator")
+
+class ProductionRun(Base):
+    __tablename__ = "production_runs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    machine_id = Column(Integer, ForeignKey("machines.id"), nullable=False, index=True)
+    mold_id = Column(Integer, ForeignKey("molds.id"), nullable=False, index=True)
+    operator_id = Column(Integer, ForeignKey("operators.id"), nullable=True)
+    
     start_time = Column(String(20), nullable=False)
-    end_time = Column(String(20))
+    finish_time = Column(String(20), nullable=True)
+    target_quantity = Column(Integer, nullable=True)
+    
+    mold_mount_time = Column(String(20), nullable=True)
+    mold_change_time = Column(String(20), nullable=True)
+    mold_change_2_time = Column(String(20), nullable=True)
+    total_change_minutes = Column(Float, default=0.0)
+    
+    material_type = Column(String(10), nullable=True)  # PP, ABS, PC, etc.
+    
+    total_production_minutes = Column(Float, default=0.0)
+    net_production_minutes = Column(Float, default=0.0)
+    
     ideal_cycle_time = Column(Float)
     actual_cycle_time = Column(Float)
+    
     quantity_produced = Column(Integer, default=0)
     quantity_rejected = Column(Integer, default=0)
-    status = Column(String(20), default="running")
+    status = Column(String(20), default="running", index=True)
+    date = Column(String(10), index=True)
     
     machine = relationship("Machine", back_populates="production_runs")
     mold = relationship("Mold", back_populates="production_runs")
+    operator = relationship("Operator", back_populates="production_runs")
+
+    __table_args__ = (
+        Index('idx_production_machine_date', 'machine_id', 'date'),
+        Index('idx_production_status_date', 'status', 'date'),
+    )
 
 class Material(Base):
     __tablename__ = "materials"

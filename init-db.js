@@ -173,22 +173,49 @@ async function initDatabase() {
   
   await OptimalParameter.bulkCreate(params);
   
-  console.log('Creating production logs...');
+  console.log('Creating production logs (Daily Work)...');
   const now = new Date();
   const oneHourAgo = new Date(now - 3600000);
   const twoHoursAgo = new Date(now - 7200000);
   const threeHoursAgo = new Date(now - 10800000);
+  const fourHoursAgo = new Date(now - 14400000);
+  const fiveHoursAgo = new Date(now - 18000000);
+  const sixHoursAgo = new Date(now - 21600000);
   const yesterday = new Date(now - 86400000);
+  const twoDaysAgo = new Date(now - 172800000);
+  const lastWeek = new Date(now - 604800000);
   
   await ProductionLog.bulkCreate([
-    { machine_id: 1, mold_id: 1, operator_id: 3, start_time: threeHoursAgo, end_time: twoHoursAgo, quantity_produced: 1500, quantity_rejected: 25, material_used: 'PP', notes: 'Morning shift', status: 'completed' },
-    { machine_id: 2, mold_id: 3, operator_id: 3, start_time: twoHoursAgo, end_time: oneHourAgo, quantity_produced: 2800, quantity_rejected: 42, material_used: 'PP', notes: 'Fast cycle', status: 'completed' },
-    { machine_id: 3, mold_id: 5, operator_id: 3, start_time: oneHourAgo, end_time: null, quantity_produced: 800, quantity_rejected: 10, material_used: 'POM', notes: 'Ongoing production', status: 'running' },
-    { machine_id: 4, mold_id: 7, operator_id: 3, start_time: oneHourAgo, end_time: null, quantity_produced: 450, quantity_rejected: 5, material_used: 'ABS', notes: 'Small batch', status: 'running' },
-    { machine_id: 5, mold_id: 2, operator_id: 3, start_time: yesterday, end_time: yesterday, quantity_produced: 3500, quantity_rejected: 80, material_used: 'ABS', notes: 'Completed yesterday', status: 'completed' },
-    { machine_id: 1, mold_id: 9, operator_id: 3, start_time: now, end_time: null, quantity_produced: 200, quantity_rejected: 2, material_used: 'ABS', notes: 'Just started', status: 'running' },
-    { machine_id: 6, mold_id: 10, operator_id: 3, start_time: twoHoursAgo, end_time: oneHourAgo, quantity_produced: 1200, quantity_rejected: 15, material_used: 'PVC', notes: 'Good quality', status: 'completed' },
-    { machine_id: 7, mold_id: 11, operator_id: 3, start_time: oneHourAgo, end_time: null, quantity_produced: 300, quantity_rejected: 8, material_used: 'PP', notes: 'Large part', status: 'running' },
+    // Running now (active production)
+    { machine_id: 1, mold_id: 1, operator_id: 3, start_time: oneHourAgo, end_time: null, quantity_produced: 2500, quantity_rejected: 15, material_used: 'PP', notes: 'Running - Cap Container', status: 'running' },
+    { machine_id: 2, mold_id: 3, operator_id: 3, start_time: twoHoursAgo, end_time: null, quantity_produced: 1800, quantity_rejected: 8, material_used: 'ABS', notes: 'Running - Bottle Cap', status: 'running' },
+    { machine_id: 3, mold_id: 5, operator_id: 3, start_time: fiveHoursAgo, end_time: null, quantity_produced: 4200, quantity_rejected: 22, material_used: 'POM', notes: 'Running - Gear Wheel', status: 'running' },
+    { machine_id: 4, mold_id: 7, operator_id: 3, start_time: threeHoursAgo, end_time: null, quantity_produced: 950, quantity_rejected: 5, material_used: 'ABS', notes: 'Running - Phone Case', status: 'running' },
+    { machine_id: 8, mold_id: 8, operator_id: 3, start_time: fourHoursAgo, end_time: null, quantity_produced: 1200, quantity_rejected: 12, material_used: 'PET', notes: 'Running - Bottle Body', status: 'running' },
+    { machine_id: 10, mold_id: 19, operator_id: 3, start_time: twoHoursAgo, end_time: null, quantity_produced: 3500, quantity_rejected: 18, material_used: 'ABS', notes: 'Running - Button Fastener', status: 'running' },
+    
+    // Completed today
+    { machine_id: 5, mold_id: 2, operator_id: 3, start_time: sixHoursAgo, end_time: fourHoursAgo, quantity_produced: 3500, quantity_rejected: 45, material_used: 'ABS', notes: 'Completed - Handle Part', status: 'completed' },
+    { machine_id: 6, mold_id: 10, operator_id: 3, start_time: fiveHoursAgo, end_time: threeHoursAgo, quantity_produced: 5200, quantity_rejected: 38, material_used: 'PVC', notes: 'Completed - Pipe Fitting', status: 'completed' },
+    { machine_id: 7, mold_id: 11, operator_id: 3, start_time: fourHoursAgo, end_time: twoHoursAgo, quantity_produced: 1800, quantity_rejected: 22, material_used: 'PP', notes: 'Completed - Chair Seat', status: 'completed' },
+    { machine_id: 9, mold_id: 12, operator_id: 3, start_time: threeHoursAgo, end_time: oneHourAgo, quantity_produced: 2800, quantity_rejected: 20, material_used: 'PE', notes: 'Completed - Lid Cover', status: 'completed' },
+    { machine_id: 11, mold_id: 14, operator_id: 3, start_time: twoHoursAgo, end_time: oneHourAgo, quantity_produced: 6500, quantity_rejected: 12, material_used: 'PP', notes: 'Completed - Medical Syringe', status: 'completed' },
+    { machine_id: 12, mold_id: 16, operator_id: 3, start_time: oneHourAgo, end_time: now, quantity_produced: 2200, quantity_rejected: 8, material_used: 'PS', notes: 'Completed - Spoon Set', status: 'completed' },
+    
+    // Completed yesterday
+    { machine_id: 1, mold_id: 9, operator_id: 3, start_time: yesterday, end_time: yesterday, quantity_produced: 8500, quantity_rejected: 120, material_used: 'ABS', notes: 'Yesterday - Toy Block', status: 'completed' },
+    { machine_id: 2, mold_id: 4, operator_id: 3, start_time: yesterday, end_time: yesterday, quantity_produced: 1200, quantity_rejected: 55, material_used: 'PC', notes: 'Yesterday - Housing Box', status: 'completed' },
+    { machine_id: 3, mold_id: 6, operator_id: 3, start_time: yesterday, end_time: yesterday, quantity_produced: 2800, quantity_rejected: 42, material_used: 'PA', notes: 'Yesterday - Bracket', status: 'completed' },
+    { machine_id: 4, mold_id: 15, operator_id: 3, start_time: yesterday, end_time: yesterday, quantity_produced: 950, quantity_rejected: 18, material_used: 'PC', notes: 'Yesterday - Electrical Box', status: 'completed' },
+    { machine_id: 5, mold_id: 18, operator_id: 3, start_time: yesterday, end_time: yesterday, quantity_produced: 550, quantity_rejected: 28, material_used: 'PP', notes: 'Yesterday - Storage Bin', status: 'completed' },
+    
+    // Completed 2 days ago
+    { machine_id: 6, mold_id: 13, operator_id: 3, start_time: twoDaysAgo, end_time: twoDaysAgo, quantity_produced: 980, quantity_rejected: 35, material_used: 'ABS', notes: '2 days ago - Automotive Panel', status: 'completed' },
+    { machine_id: 7, mold_id: 17, operator_id: 3, start_time: twoDaysAgo, end_time: twoDaysAgo, quantity_produced: 2100, quantity_rejected: 48, material_used: 'PA', notes: '2 days ago - Wheel Hub', status: 'completed' },
+    { machine_id: 8, mold_id: 20, operator_id: 3, start_time: twoDaysAgo, end_time: twoDaysAgo, quantity_produced: 420, quantity_rejected: 15, material_used: 'PE', notes: '2 days ago - Large Container', status: 'completed' },
+    
+    // In maintenance (needs start_time)
+    { machine_id: 13, mold_id: 1, operator_id: 3, start_time: lastWeek, end_time: null, quantity_produced: 0, quantity_rejected: 0, material_used: 'PP', notes: 'Maintenance - Hydraulic repair', status: 'maintenance' },
   ]);
   
   console.log('Database initialized successfully!');

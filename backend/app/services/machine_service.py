@@ -1,11 +1,12 @@
 from sqlalchemy.orm import Session
+from datetime import datetime
 from app.models.database_models import Branch, MachineSpec, Machine, Mold, ProductionRun
 from app.core.machine_catalog import MACHINE_SPECS_CATALOG
 from app.schemas import (
     BranchCreate, BranchResponse,
     MachineSpecResponse, MachineCreate, MachineResponse, MachineDetailResponse,
-    MoldCreate, MoldResponse,
-    ProductionRunCreate, ProductionRunResponse
+    MoldCreate, MoldResponse, MoldUpdate,
+    ProductionRunCreate, ProductionRunUpdate, ProductionRunResponse
 )
 
 class MachineService:
@@ -191,6 +192,22 @@ class MoldService:
         db.refresh(mold)
         return MoldService._to_response(mold)
 
+    @staticmethod
+    def update_mold_partial(db: Session, mold_id: int, data) -> MoldResponse:
+        """Update mold with partial data - for rayoun box assignment"""
+        mold = db.query(Mold).filter(Mold.id == mold_id).first()
+        if not mold:
+            raise ValueError("Mold not found")
+
+        update_data = data.model_dump(exclude_none=True) if hasattr(data, 'model_dump') else data
+        for key, value in update_data.items():
+            if hasattr(mold, key):
+                setattr(mold, key, value)
+
+        db.commit()
+        db.refresh(mold)
+        return MoldService._to_response(mold)
+
 
 class BranchService:
     """Branch management service"""
@@ -249,16 +266,66 @@ class ProductionService:
         run = db.query(ProductionRun).filter(ProductionRun.id == run_id).first()
         if not run:
             raise ValueError("Production run not found")
-        
-        run.end_time = str(datetime.now())
+
+        run.end_time = datetime.now().isoformat()
         run.actual_cycle_time = actual_cycle_time
         run.quantity_produced = quantity_produced
         run.quantity_rejected = quantity_rejected
         run.status = "completed"
-        
+
         db.commit()
         db.refresh(run)
         return ProductionRunResponse.model_validate(run)
 
+    @staticmethod
+    def finish_run(db: Session, run_id: int, finish_time: str = None) -> ProductionRunResponse:
+        """Finish production run - only finish_time is editable"""
+        run = db.query(ProductionRun).filter(ProductionRun.id == run_id).first()
+        if not run:
+            raise ValueError("Production run not found")
 
-from datetime import datetime
+        if finish_time:
+            run.finish_time = finish_time
+        else:
+            run.finish_time = datetime.now().isoformat()
+
+        if run.mold_change_time and run.mold_mount_time:
+            mount_dt = datetime.fromisoformat(run.mold_mount_time.replace('Z', '+00:00'))
+            change_dt = datetime.fromisoformat(run.mold_change_time.replace('Z', '+00:00'))
+            diff = (change_dt - mount_dt).total_seconds() / 60
+            run.total_change_minutes = int(diff)
+
+        if not run.end_time:
+            run.status = "completed"
+            run.end_time = run.finish_time
+
+        db.commit()
+        db.refresh(run)
+        return ProductionRunResponse.model_validate(run)
+
+    @staticmethod
+    def change_mold(db: Session, run_id: int, new_mold_id: int) -> ProductionRunResponse:
+        """Change mold during production - sets change time and calculates duration"""
+        run = db.query(ProductionRun).filter(ProductionRun.id == run_id).first()
+        if not run:
+            raise ValueError("Production run not found")
+
+        mold = db.query(Mold).filter(Mold.id == new_mold_id).first()
+        if not mold:
+            raise ValueError("Mold not found")
+
+        if not run.mold_mount_time:
+            run.mold_mount_time = datetime.now().isoformat()
+
+        run.mold_change_time = datetime.now().isoformat()
+        run.mold_id = new_mold_id
+
+        if run.mold_mount_time:
+            mount_dt = datetime.fromisoformat(run.mold_mount_time.replace('Z', '+00:00'))
+            change_dt = datetime.fromisoformat(run.mold_change_time.replace('Z', '+00:00'))
+            diff = (change_dt - mount_dt).total_seconds() / 60
+            run.total_change_minutes = int(diff)
+
+        db.commit()
+        db.refresh(run)
+        return ProductionRunResponse.model_validate(run)

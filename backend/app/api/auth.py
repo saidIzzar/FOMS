@@ -20,17 +20,13 @@ try:
 except ImportError:
     HAS_USER_MODEL = False
 
-# Simple in-memory user store for demo (replace with database in production)
-# Pre-hashed passwords (same hash every time)
-ADMIN_HASH = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4b6VvETK9ufLJSbK"
-ENGINEER_HASH = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4b6VvETK9ufLJSbK"
-YASSIN_HASH = "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4b6VvETK9ufLJSbK"
-
+# Simple in-memory user store for demo
+# Plain text passwords for demo - in production use proper hashing
 USERS_DB = {
     "admin": {
         "id": 1,
         "username": "admin",
-        "password": ADMIN_HASH,
+        "password": "admin",  # plain text for demo
         "email": "admin@foms.com",
         "first_name": "Admin",
         "last_name": "User",
@@ -42,7 +38,7 @@ USERS_DB = {
     "engineer": {
         "id": 2,
         "username": "engineer",
-        "password": ENGINEER_HASH,
+        "password": "engineer",  # plain text for demo
         "email": "engineer@foms.com",
         "first_name": "John",
         "last_name": "Engineer",
@@ -54,7 +50,7 @@ USERS_DB = {
     "yassin": {
         "id": 3,
         "username": "yassin",
-        "password": YASSIN_HASH,
+        "password": "yassin",  # plain text for demo
         "email": "yassin@foms.com",
         "first_name": "Yassin",
         "last_name": "Operator",
@@ -89,17 +85,20 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Verify password
-    if not bcrypt.checkpw(request.password.encode(), user["password"].encode()):
+    # Verify password (plain text comparison for demo)
+    if request.password != user["password"]:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Create token
+    # Create token with complete user info
     payload = {
-        "id": user["id"],
-        "username": user["username"],
-        "role": user["role"]
+        "sub": user["username"],  # standard JWT subject claim
+        "user_id": user["id"],
+        "role": user["role"],
+        "first_name": user.get("first_name"),
+        "last_name": user.get("last_name"),
+        "exp": datetime.now() + timedelta(hours=8)
     }
-    
+
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
     
     return {
@@ -136,14 +135,17 @@ def register(request: LoginRequest, db: Session = Depends(get_db)):
     }
     
     USERS_DB[request.username] = new_user
-    
-    # Create token
+
+    # Create token with complete user info
     payload = {
-        "id": new_user["id"],
-        "username": new_user["username"],
-        "role": new_user["role"]
+        "sub": new_user["username"],
+        "user_id": new_user["id"],
+        "role": new_user["role"],
+        "first_name": new_user.get("first_name"),
+        "last_name": new_user.get("last_name"),
+        "exp": datetime.now() + timedelta(hours=8)
     }
-    
+
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
     
     return {
